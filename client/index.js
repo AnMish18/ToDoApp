@@ -1,17 +1,21 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
-import { Provider } from "react-redux";
-import { PersistGate } from "redux-persist/integration/react";
-import { store, persistor } from "./redux";
+import { configureStore , combineReducers, getDefaultMiddleware } from "@reduxjs/toolkit";
+import {persistReducer , persistStore , FLUSH , PURGE , PAUSE , REGISTER , REHYDRATE , PERSIST} from 'redux-persist'
+import storage from "redux-persist/lib/storage";
+import UserSlice from "./UserSlice";
+import TaskSlice from "./TaskSlice";
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <PersistGate persistor={persistor}>
-        <App />
-      </PersistGate>
-    </Provider>
-  </React.StrictMode>
-);
+const persistConfig = {key: 'root', storage , version: 1}
+const rootReducer = combineReducers({user: UserSlice , task: TaskSlice})
+const persistedReducer = persistReducer(persistConfig , rootReducer)
+
+export const store = configureStore({
+    reducer: persistedReducer,
+    middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+        serializableCheck: {
+            ignoreActions: [FLUSH , PURGE , PAUSE , REGISTER , REHYDRATE , PERSIST]
+        } 
+    })
+})
+
+export const persistor = persistStore(store)
